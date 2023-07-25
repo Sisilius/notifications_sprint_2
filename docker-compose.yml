@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  notification:
+    container_name: notification
+    build: ./src/
+    env_file:
+      - .env
+    healthcheck:
+      test: curl --fail http://localhost 8000 || exit -1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./src:/app
+    networks:
+      - backend
+
+
+networks:
+  backend:
+    name: backend
+    driver: bridge
