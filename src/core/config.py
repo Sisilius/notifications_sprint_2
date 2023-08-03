@@ -10,7 +10,6 @@ logging_config.dictConfig(LOGGING)
 
 
 BASE_DIR = Path(__file__).parent.parent.parent.absolute()
-BASE_DIR = Path(__file__).parent.parent.parent.absolute()
 
 
 class Settings(BaseSettings):
@@ -31,9 +30,9 @@ class Settings(BaseSettings):
     postgres_db: str = Field(default="test_db", env="POSTGRES_DB")
 
     def get_db_uri(self):
-        DRIVER = "postgresql+asyncpg"
+        driver = "postgresql+asyncpg"
         return "{driver}://{user}:{password}@{host}:{port}/{db}".format(
-            driver = DRIVER,
+            driver=driver,
             user=self.postgres_user,
             password=self.postgres_password,
             host=self.postgres_host,
@@ -49,5 +48,9 @@ class Settings(BaseSettings):
             port=self.rabbit_port
         )
 
+    class Config:
+        env_file = BASE_DIR/'.env'
+
 
 settings = Settings()
+

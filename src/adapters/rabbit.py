@@ -8,8 +8,6 @@ from aio_pika.channel import Channel
 from aio_pika.connection import Connection
 from aio_pika.message import Message
 
-from src.core.config import settings
-
 
 class RMQ:
     def __init__(self) -> None:
@@ -19,11 +17,15 @@ class RMQ:
 
     async def connect(self, url: str, topic_name: str = 'topic_v1'):
         self.topic_name = topic_name
-
+        print('################################################################################################'
+              '########################################################')
+        print(url)
         self.connection = await connect_robust(
             url=url,
             loop=asyncio.get_running_loop()
         )
+
+        print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
         self.channel = await self.connection.channel()
 
         self.exchange = await self.channel.declare_exchange(
@@ -31,7 +33,13 @@ class RMQ:
             ExchangeType.TOPIC
         )
 
-    async def send(self, routing_key: str, data: dict, correlation_id):
+    async def send(
+        self,
+        routing_key: str,
+        data: dict,
+        correlation_id,
+    ) -> None:
+
         message = Message(
             body=self._serialize(data),
             content_type="application/json",
@@ -60,7 +68,8 @@ class RMQ:
                 async with message.process(ignore_processed=True):
                     await func(message)
 
-    def _serialize(self, data: Any) -> bytes:
+    @staticmethod
+    def _serialize(data: Any) -> bytes:
         return orjson.dumps(data)
 
     async def close(self):

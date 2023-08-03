@@ -1,41 +1,46 @@
-from fastapi import APIRouter, FastAPI
+from contextlib import asynccontextmanager
+from uuid import uuid4
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
-from redis.asyncio import Redis
 
-from .adapters import rabbit, redis
-from .core.config import settings
-
-
-def prepare_app(routers: tuple[APIRouter]) -> FastAPI:
-    app_ = FastAPI(
-        title=settings.project_name,
-        docs_url="/api/openapi",
-        openapi_url="/api/openapi.json",
-        default_response_class=ORJSONResponse,
-    )
-
-    app_.add_middleware(
-        CORSMiddleware,
-        allow_origins=['*'],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    for router in routers:
-        app_.include_router(router)
-    return app_
+from api.v1 import events
+from core.config import settings
+from services.utils.preview import startup, shutdown
 
 
-@app.on_event('startup')
-async def startup():
-    redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    rabbit.rabbit = rabbit.RMQ()
-    await rabbit.rabbit.connect(settings.get_amqp_uri())
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup()
+    yield
+    await shutdown()
 
 
-@app.on_event('shutdown')
-async def shutdown():
-    await redis.redis.close()
-    await rabbit.rabbit.close()
+app = FastAPI(
+    lifespan=lifespan,
+    title=settings.project_name,
+    docs_url="/api/openapi",
+    openapi_url="/api/openapi.json",
+    default_response_class=ORJSONResponse,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    response = await call_next(request)
+    request_id = response.headers.get("X-Request-Id")
+    if request_id is None:
+        response.headers["X-Request-Id"] = str(uuid4())
+    return response
+
+
+app.include_router(new_series.router, prefix='/api/v1/new_series', tags=['new_series'])
