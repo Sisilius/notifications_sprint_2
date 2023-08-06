@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 import orjson
 from aio_pika import DeliveryMode, Exchange, ExchangeType, connect_robust
-from aio_pika.abc import AbstractIncomingMessage
+from aio_pika.abc import AbstractIncomingMessage, AbstractQueue
 from aio_pika.channel import Channel
 from aio_pika.connection import Connection
 from aio_pika.message import Message
@@ -14,8 +14,11 @@ class RMQ:
         self.connection: Connection | None = None
         self.channel: Channel | None = None
         self.exchange: Exchange | None = None
+        self.queue: AbstractQueue | None = None
 
-    async def connect(self, url: str, topic_name: str = 'topic_v1'):
+        self.funcs: dict = {}
+
+    async def connect(self, url: str, queue_name: str, topic_name: str = 'topic_v1'):
         self.topic_name = topic_name
         self.connection = await connect_robust(
             url=url,
@@ -28,6 +31,7 @@ class RMQ:
             self.topic_name,
             ExchangeType.TOPIC
         )
+        self.queue = await self.channel.declare_queue(queue_name, durable=True)
 
     async def send(
         self,
@@ -47,26 +51,35 @@ class RMQ:
     async def consume_queue(
             self,
             func: Callable,
-            binding_keys: str | list[str],
-            queue_name: str
+            task_id: int,
+            binding_keys: str | list[str]
     ):
-        queue = await self.channel.declare_queue(queue_name, durable=True)
-
         if isinstance(binding_keys, list):
             for binding_key in binding_keys:
-                await queue.bind(self.exchange, routing_key=binding_key)
+                await self.queue.bind(self.exchange, routing_key=binding_key)
         elif isinstance(binding_keys, str):
-            await queue.bind(self.exchange, routing_key=binding_keys)
+            await self.queue.bind(self.exchange, routing_key=binding_keys)
 
-        async with queue.iterator() as iterator:
+        self.funcs.update({
+            task_id: func
+        })
+
+    async def start_iterator(self):
+        async with self.queue.iterator() as iterator:
             message: AbstractIncomingMessage
             async for message in iterator:
                 async with message.process(ignore_processed=True):
-                    await func(message)
+                    body: dict = self._deserialize(message.body)
+                    task_id = body.pop("task_id")
+                    await self.funcs[task_id](message)
 
     @staticmethod
     def _serialize(data: Any) -> bytes:
         return orjson.dumps(data)
+
+    @staticmethod
+    def _deserialize(data: bytes) -> Any:
+        return orjson.loads(data)
 
     async def close(self):
         if self.channel:

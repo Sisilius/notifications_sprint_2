@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from adapters.redis import get_redis
 import uuid
 from .scheduler.scheduler import get_scheduler
-from scheduler.task import create_event_like
+from .scheduler.task import create_event_like
 
 
 class FastNotificationsService(BaseNotifications):
@@ -68,7 +68,7 @@ class FastNotificationsService(BaseNotifications):
         if old_series is None:
 
             await self.set_data_in_queue(
-                data=new_series.dict(),
+                data=new_series.dict() | {'task_id': 2},
                 routing_key='event.series',
                 correlation_id=new_series.movie_id
             )
@@ -83,7 +83,7 @@ class FastNotificationsService(BaseNotifications):
             if old_series.series_number < new_series.series_number:
 
                 await self.set_data_in_queue(
-                    data=new_series.dict(),
+                    data=new_series.dict() | {'task_id': 2},
                     routing_key='event.series',
                     correlation_id=new_series.movie_id
                 )
@@ -108,7 +108,7 @@ class FastNotificationsService(BaseNotifications):
         """
 
         await self.set_data_in_queue(
-            data=new_verify.dict(),
+            data=new_verify.dict() | {'task_id': 3},
             routing_key='event.verify',
             correlation_id=new_verify.user_id,
         )
@@ -119,18 +119,20 @@ class FastNotificationsService(BaseNotifications):
     ) -> None:
 
         scheduler = await get_scheduler()
-        data = await self.cache_handler.get_by_id(new_like.subject_id)
+        data = await self.cache_handler.get_by_id(key=new_like.subject_id)
 
         if data is None:
-            scheduler.add_job(create_event_like, 'interval', minutes=10, args=(new_like, ))
+            # scheduler.add_job(create_event_like, 'interval', minutes=10, args=(new_like,))
+            scheduler.add_job(create_event_like, 'interval', seconds=1, args=(new_like,), id=new_like.subject_id)
             await self.cache_handler.set_by_id(
                 key=new_like.subject_id,
-                value=1
+                value=1,
+                ttl=30
             )
 
         else:
             old_value = await self.cache_handler.get_by_id(
-                new_like.subject_id,
+                key=new_like.subject_id,
             )
 
             await self.set_data_by_id(

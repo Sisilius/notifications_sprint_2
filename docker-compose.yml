@@ -18,6 +18,16 @@ services:
       redis:
         condition: service_healthy
 
+  email_worker:
+    build: ./email_worker
+    env_file:
+      - .env
+    networks:
+      - backend
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: always
 
   nginx:
     image: nginx:1.23

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
-from fastapi import Body
-from models.notifications import NewSeriesModel, VerifyUserModel, LikeModel
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from adapters.postgres import get_session
-from services.notifications import get_notifications_service, FastNotificationsService
+from models.notifications import LikeModel, NewSeriesModel, VerifyUserModel
+from services.notifications import (FastNotificationsService,
+                                    get_notifications_service)
 
 router = APIRouter()
 

@@ -1,13 +1,13 @@
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 
 from api.v1 import events
 from core.config import settings
-from services.utils.preview import startup, shutdown
+from services.utils.preview import shutdown, startup
 
 
 @asynccontextmanager
@@ -36,11 +36,11 @@ app.add_middleware(
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    response = await call_next(request)
+    response: Response = await call_next(request)
     request_id = response.headers.get("X-Request-Id")
     if request_id is None:
         response.headers["X-Request-Id"] = str(uuid4())
     return response
 
 
-app.include_router(new_series.router, prefix='/api/v1/new_series', tags=['new_series'])
+app.include_router(events.router, prefix='/api/v1/new_series', tags=['new_series'])

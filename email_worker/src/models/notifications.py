@@ -2,7 +2,7 @@ import uuid
 
 from sqlmodel import Field
 
-from models.base import BaseOrjsonModel
+from src.models.base import BaseOrjsonModel
 
 
 class NewSeriesModel(BaseOrjsonModel):
@@ -29,8 +29,6 @@ class VerifyUserModel(BaseOrjsonModel):
 
 
 class LikeModel(BaseOrjsonModel):
-    user_id: str
-    user_name: str
-    user_email: str
-    like_subject: str
-    subject_id: str
+    likes: int
+    email: str
+    target: str

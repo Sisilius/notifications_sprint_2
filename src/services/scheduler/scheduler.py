@@ -1,5 +1,4 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from services.scheduler import task
 
 
 app_scheduler: AsyncIOScheduler | None = None
