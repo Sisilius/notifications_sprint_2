@@ -18,7 +18,12 @@ class RMQ:
 
         self.funcs: dict = {}
 
-    async def connect(self, url: str, queue_name: str, topic_name: str = 'topic_v1'):
+    async def connect(
+        self,
+        url: str,
+        queue_name: str,
+        topic_name: str = "topic_v1"
+    ):
         self.topic_name = topic_name
         self.connection = await connect_robust(
             url=url,
@@ -63,6 +68,14 @@ class RMQ:
         self.funcs.update({
             task_id: func
         })
+
+    @property
+    def query(self):
+        return self.query
+
+    @property
+    def funcs(self):
+        return self.funcs
 
     async def start_iterator(self):
         async with self.queue.iterator() as iterator:
