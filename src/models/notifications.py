@@ -34,3 +34,14 @@ class LikeModel(BaseOrjsonModel):
     user_email: str
     like_subject: str
     subject_id: str
+
+
+class SmsModel(BaseOrjsonModel):
+    phone: str
+    message: str
+
+
+class PushModel(BaseOrjsonModel):
+    title: str
+    body: str
+    icon: str

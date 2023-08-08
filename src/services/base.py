@@ -32,6 +32,34 @@ class AbstractCache(abc.ABC):
         raise NotImplementedError
 
 
+class AbstractSender(abc.ABC):
+    @abc.abstractmethod
+    async def send_message(self, *args, **kwargs):
+        raise NotImplementedError
+
+
+class PushSender(AbstractSender):
+    def __init__(
+        self,
+        service_url: str
+    ):
+        self.service_url = service_url
+
+    async def send_message(self, *args, **kwargs):
+        pass
+
+
+class SMSSender(AbstractSender):
+    def __int__(
+        self,
+        service_url: str
+    ):
+        self.service_url = service_url
+
+    async def send_message(self, *args, **kwargs):
+        pass
+
+
 class RedisCache(AbstractCache):
     def __init__(
         self,
@@ -219,8 +247,8 @@ class BaseNotifications:
         await session.commit()
 
     async def get_data_by_id(
-            self,
-            key: str,
+        self,
+        key: str,
     ) -> str:
         """Метод возвращает запись по id."""
 

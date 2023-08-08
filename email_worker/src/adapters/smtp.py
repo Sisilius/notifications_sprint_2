@@ -14,16 +14,18 @@ class SmtpWorker:
     def __init__(
         self,
         smtp_address: str,
-        smtp_port: str,
+        smtp_port: int,
         smtp_login: str,
         smtp_password: str,
-        smtp_use_tls: bool
+        smtp_use_tls: bool,
+        smtp_sender: str
     ) -> None:
         self.smtp_address = smtp_address
         self.smtp_port = smtp_port
         self.smtp_login = smtp_login
         self.smtp_password = smtp_password
         self.smtp_use_tls = smtp_use_tls
+        self.smtp_sender = smtp_sender
 
         self.environment = jinja2.Environment(
             loader=jinja2.FileSystemLoader(BASE_DIR/"templates/")
@@ -32,7 +34,7 @@ class SmtpWorker:
     async def _send(self, content: str, recipients: list[str], subject: str):
 
         message = MIMEMultipart()
-        message["From"] = self.smtp_login
+        message["From"] = self.smtp_sender
         message["To"] = ", ".join(recipients)
         message["Subject"] = subject
         html_message = MIMEText(content, 'html')
@@ -42,7 +44,7 @@ class SmtpWorker:
             message,
             username=self.smtp_login,
             password=self.smtp_password,
-            sender=self.smtp_login,
+            sender=self.smtp_sender,
             recipients=recipients,
             hostname=self.smtp_address,
             port=self.smtp_port,
@@ -75,6 +77,7 @@ class SmtpWorker:
             subject="Вышла новая серия!",
             recipients=[body.user_email]
         )
+
         await message.ack()
 
     async def send_verify(self, message: AbstractIncomingMessage):
@@ -83,7 +86,7 @@ class SmtpWorker:
         content = template.render(
             user_name=body.user_name,
         )
-        await  self._send(
+        await self._send(
             content=content,
             subject="Ваша почта подтверждена!",
             recipients=[body.user_email]

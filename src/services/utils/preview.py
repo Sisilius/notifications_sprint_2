@@ -4,6 +4,7 @@ from core.config import settings
 from services.scheduler import scheduler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+
 async def startup() -> None:
     redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
     rabbit.rabbit = rabbit.RMQ()
@@ -15,9 +16,8 @@ async def startup() -> None:
 
 
 async def shutdown() -> None:
-    if redis.redis is not None:
+    if redis.redis:
         await redis.redis.close()
 
-    if rabbit.rabbit is not None:
+    if rabbit.rabbit:
         await rabbit.rabbit.close()
-
