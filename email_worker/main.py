@@ -1,6 +1,7 @@
 from src.adapters.rabbit import RMQ
 from src.adapters.smtp import SmtpWorker
 from src.core.config import settings
+from src.core.logger import logger
 
 import asyncio
 
@@ -25,4 +26,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    logger.info("Сервис запустился")
     asyncio.run(main())

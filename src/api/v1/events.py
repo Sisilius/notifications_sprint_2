@@ -5,6 +5,9 @@ from adapters.postgres import get_session
 from models.notifications import LikeModel, NewSeriesModel, VerifyUserModel
 from services.notifications import (FastNotificationsService,
                                     get_notifications_service)
+from models.ws import Message
+from services.ws_client import send_ws_message
+
 
 router = APIRouter()
 
@@ -51,3 +54,13 @@ async def create_likes_notification(
     await service.like_event(
         new_like=like,
     )
+
+
+@router.post(
+    "/new_fast_notify",
+    description="Метод для отправки сообщения по вебсокету"
+)
+async def fast_notify(
+    message: Message = Body()
+) -> None:
+    send_ws_message(message=message)
