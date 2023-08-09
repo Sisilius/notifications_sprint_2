@@ -69,14 +69,6 @@ class RMQ:
             task_id: func
         })
 
-    @property
-    def query(self):
-        return self.query
-
-    @property
-    def funcs(self):
-        return self.funcs
-
     async def start_iterator(self):
         async with self.queue.iterator() as iterator:
             message: AbstractIncomingMessage
