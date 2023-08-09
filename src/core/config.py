@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     postgres_password: str = Field(default="12345", env="POSTGRES_PASSWORD")
     postgres_db: str = Field(default="test_db", env="POSTGRES_DB")
 
+    ws_host: str = Field("0.0.0.0", env="WS_HOST")
+    ws_port: int = Field(8765, env="WS_PORT")
+
     def get_db_uri(self):
         driver = "postgresql+asyncpg"
         return "{driver}://{user}:{password}@{host}:{port}/{db}".format(

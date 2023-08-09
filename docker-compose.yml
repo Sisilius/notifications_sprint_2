@@ -29,6 +29,19 @@ services:
         condition: service_healthy
     restart: always
 
+  ws_worker:
+    build: ./ws_worker
+    env_file:
+      - .env
+    networks:
+      - backend
+    ports:
+      - 8765:8765
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+
   nginx:
     image: nginx:1.23
     volumes:

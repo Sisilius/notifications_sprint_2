@@ -8,6 +8,8 @@ from aio_pika.channel import Channel
 from aio_pika.connection import Connection
 from aio_pika.message import Message
 
+from src.core.logger import logger
+
 
 class RMQ:
     def __init__(self) -> None:
@@ -18,7 +20,12 @@ class RMQ:
 
         self.funcs: dict = {}
 
-    async def connect(self, url: str, queue_name: str, topic_name: str = 'topic_v1'):
+    async def connect(
+        self,
+        url: str,
+        queue_name: str,
+        topic_name: str = "topic_v1"
+    ):
         self.topic_name = topic_name
         self.connection = await connect_robust(
             url=url,
@@ -71,6 +78,7 @@ class RMQ:
                 async with message.process(ignore_processed=True):
                     body: dict = self._deserialize(message.body)
                     task_id = body.pop("task_id")
+                    logger.info("Получено новое сообщение в очереди")
                     await self.funcs[task_id](message)
 
     @staticmethod

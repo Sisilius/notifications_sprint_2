@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     rabbit_user: str = Field(..., env="RABBIT_USER")
     rabbit_pass: str = Field(..., env="RABBIT_PASS")
 
+    ws_host: str = Field("0.0.0.0", env="WS_HOST")
+    ws_port: int = Field(8765, env="WS_PORT")
+
     worker_sentry_dsn: str = Field(..., env="WORKER_SENTRY_DSN")
 
     def get_amqp_uri(self):
