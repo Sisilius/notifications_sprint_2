@@ -12,7 +12,8 @@ async def main():
         settings.smtp_port,
         settings.smtp_login,
         settings.smtp_password,
-        settings.smtp_use_tls
+        settings.smtp_use_tls,
+        settings.smtp_sender
     )
     await rabbit.connect(settings.get_amqp_uri(), queue_name="email_worker")
 
